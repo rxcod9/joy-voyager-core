@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Joy\VoyagerCore;
 
+use Joy\VoyagerCore\Http\Middleware\VoyagerAdminMiddleware;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 
@@ -24,11 +27,11 @@ class VoyagerCoreServiceProvider extends ServiceProvider
      *
      * @return void
      */
-    public function boot()
+    public function boot(Router $router, Dispatcher $event)
     {
         $this->registerPublishables();
 
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'joy-voyager-core');
+        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'joy-voyager');
 
         $this->mapApiRoutes();
 
@@ -36,7 +39,9 @@ class VoyagerCoreServiceProvider extends ServiceProvider
 
         $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
 
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'joy-voyager-core');
+        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'joy-voyager');
+
+        $router->aliasMiddleware('admin.user', VoyagerAdminMiddleware::class);
     }
 
     /**
@@ -57,7 +62,7 @@ class VoyagerCoreServiceProvider extends ServiceProvider
      */
     protected function mapApiRoutes(): void
     {
-        Route::prefix(config('joy-voyager-core.route_prefix', 'api'))
+        Route::prefix(config('joy-voyager.route_prefix', 'api'))
             ->middleware('api')
             ->group(__DIR__ . '/../routes/api.php');
     }
@@ -69,7 +74,7 @@ class VoyagerCoreServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__ . '/../config/voyager-core.php', 'joy-voyager-core');
+        $this->mergeConfigFrom(__DIR__ . '/../config/voyager.php', 'joy-voyager');
 
         $this->registerCommands();
     }
@@ -82,15 +87,19 @@ class VoyagerCoreServiceProvider extends ServiceProvider
     protected function registerPublishables(): void
     {
         $this->publishes([
-            __DIR__ . '/../config/voyager-core.php' => config_path('joy-voyager-core.php'),
+            __DIR__ . '/../config/voyager.php' => config_path('joy-voyager.php'),
         ], 'config');
 
         $this->publishes([
-            __DIR__ . '/../resources/views' => resource_path('views/vendor/joy-voyager-core'),
+            __DIR__ . '/../resources/views' => resource_path('views/vendor/joy-voyager'),
         ], 'views');
 
         $this->publishes([
-            __DIR__ . '/../resources/lang' => resource_path('lang/vendor/joy-voyager-core'),
+            __DIR__ . '/../resources/views/formfields' => resource_path('views/vendor/voyager/formfields'),
+        ], 'overwrite-voyager-views');
+
+        $this->publishes([
+            __DIR__ . '/../resources/lang' => resource_path('lang/vendor/joy-voyager'),
         ], 'translations');
     }
 

@@ -28,6 +28,9 @@ composer require joy/voyager-core
 
 # 2. Publish
 php artisan vendor:publish --provider="Joy\VoyagerCore\VoyagerCoreServiceProvider" --force
+
+# 3. Publish voyager overriden views [MANDATORY]
+php artisan vendor:publish --provider="Joy\VoyagerCore\VoyagerCoreServiceProvider" --tag="overwrite-voyager-views" --force
 ```
 
 ---
@@ -40,7 +43,7 @@ Installation generates.
 
 <!-- ## Views Customization
 
-In order to override views delivered by Voyager DataTable, copy contents from ``vendor/joy/voyager-core/resources/views`` to the ``views/vendor/joy-voyager-core`` directory of your Laravel installation. -->
+In order to override views delivered by Voyager DataTable, copy contents from ``vendor/joy/voyager-core/resources/views`` to the ``views/vendor/joy-voyager`` directory of your Laravel installation. -->
 
 ## Working Example
 

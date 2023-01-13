@@ -5,12 +5,12 @@ return [
     /*
      * The config_key for voyager-core package.
      */
-    'config_key' => env('VOYAGER_CORE_CONFIG_KEY', 'joy-voyager-core'),
+    'config_key' => env('VOYAGER_CORE_CONFIG_KEY', 'joy-voyager'),
 
     /*
      * The route_prefix for voyager-core package.
      */
-    'route_prefix' => env('VOYAGER_CORE_ROUTE_PREFIX', 'joy-voyager-core'),
+    'route_prefix' => env('VOYAGER_CORE_ROUTE_PREFIX', 'joy-voyager'),
 
     /*
     |--------------------------------------------------------------------------

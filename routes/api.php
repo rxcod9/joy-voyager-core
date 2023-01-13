@@ -14,10 +14,10 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::group(['as' => 'joy-voyager-core.'], function () {
+Route::group(['as' => 'joy-voyager.'], function () {
     // event(new Routing()); @deprecated
 
-    $namespacePrefix = '\\' . config('joy-voyager-core.controllers.namespace') . '\\';
+    $namespacePrefix = '\\' . config('joy-voyager.controllers.namespace') . '\\';
 
     // event(new RoutingAfter()); @deprecated
 });
