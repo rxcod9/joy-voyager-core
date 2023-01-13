@@ -22,11 +22,11 @@ trait MorphToRelationAction
         $on_page  = 50;
         $search   = $request->input('search', false);
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
-        
+
         $method = $request->input('method', 'add');
 
         $typeColumnValue = $request->input('type-column-value');
-        
+
         $model = app($dataType->model_name);
         if ($method != 'add') {
             $model = $model->find($request->input('id'));
@@ -38,15 +38,15 @@ trait MorphToRelationAction
         foreach ($rows as $key => $row) {
             if ($row->field === $request->input('type')) {
                 $options = $row->details;
-                if(!collect((array) $options->types)->contains('model', '=', $typeColumnValue)) {
+                if (!collect((array) $options->types)->contains('model', '=', $typeColumnValue)) {
                     throw new InvalidArgumentException('Invalid type-column-value');
                 }
 
-                $options = collect((array) $options->types)->first(function($item) use($typeColumnValue) {
+                $options = collect((array) $options->types)->first(function ($item) use ($typeColumnValue) {
                     return $item->model === $typeColumnValue;
                 });
-                $model   = app($typeColumnValue);
-                $skip    = $on_page * ($page - 1);
+                $model = app($typeColumnValue);
+                $skip  = $on_page * ($page - 1);
 
                 $additional_attributes = $model->additional_attributes ?? [];
 
