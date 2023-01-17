@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Str;
 use Symfony\Component\VarDumper\VarDumper;
+use TCG\Voyager\Facades\Voyager;
+use TCG\Voyager\Models\DataRow;
 use TCG\Voyager\Models\DataType;
 
 // if (! function_exists('joyVoyagerCore')) {
@@ -26,6 +28,37 @@ if (!function_exists('isInPatterns')) {
             }
         }
         return false;
+    }
+}
+
+if (!function_exists('isDataRowInPatterns')) {
+    /**
+     * Helper
+     */
+    function isDataRowInPatterns($dataRow, $dataRowPatterns)
+    {
+        foreach ($dataRowPatterns as $pattern) {
+            if (
+                Str::is($pattern, $dataRow->field) ||
+                (optional($dataRow->details)->column && Str::is($pattern, optional($dataRow->details)->column)) ||
+                (optional($dataRow->details)->type_column && Str::is($pattern, optional($dataRow->details)->type_column))
+            ) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
+if (!function_exists('dataRowByField')) {
+    /**
+     * DataRow by field
+     *
+     * @param DataRow
+     */
+    function dataRowByField($field): DataRow
+    {
+        return Voyager::model('DataRow')->where('field', $field)->firstOrFail();
     }
 }
 
