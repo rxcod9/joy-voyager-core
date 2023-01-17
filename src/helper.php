@@ -65,18 +65,25 @@ if (!function_exists('dataRowByField')) {
 if (!function_exists('removeRelationshipField')) {
     function removeRelationshipField(DataType $dataType, $bread_type = 'browse')
     {
-        $forget_keys = [];
+        $forgetKeys = [];
         foreach ($dataType->{$bread_type . 'Rows'} as $key => $row) {
             if ($row->type == 'relationship') {
                 if ($row->details->type == 'belongsTo') {
                     $relationshipField = @$row->details->column;
                     $keyInCollection   = key($dataType->{$bread_type . 'Rows'}->where('field', '=', $relationshipField)->toArray());
-                    array_push($forget_keys, $keyInCollection);
+                    array_push($forgetKeys, $keyInCollection);
+                } elseif ($row->details->type == 'morphTo') {
+                    $relationshipField     = @$row->details->column;
+                    $relationshipTypeField = @$row->details->type_column;
+                    $keyInCollection       = key($dataType->{$bread_type . 'Rows'}->where('field', '=', $relationshipField)->toArray());
+                    $typeKeyInCollection   = key($dataType->{$bread_type . 'Rows'}->where('field', '=', $relationshipTypeField)->toArray());
+                    array_push($forgetKeys, $keyInCollection);
+                    array_push($forgetKeys, $typeKeyInCollection);
                 }
             }
         }
 
-        foreach ($forget_keys as $forget_key) {
+        foreach ($forgetKeys as $forget_key) {
             $dataType->{$bread_type . 'Rows'}->forget($forget_key);
         }
 
