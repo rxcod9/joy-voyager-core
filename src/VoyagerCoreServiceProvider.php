@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace Joy\VoyagerCore;
 
-use Joy\VoyagerCore\Http\Middleware\VoyagerAdminMiddleware;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Joy\VoyagerCore\Http\Middleware\VoyagerAdminMiddleware;
+use Joy\VoyagerCore\Facades\Voyager as VoyagerFacade;
 
 /**
  * Class VoyagerCoreServiceProvider
@@ -37,7 +39,9 @@ class VoyagerCoreServiceProvider extends ServiceProvider
 
         $this->mapWebRoutes();
 
-        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        if (config('joy-voyager.database.autoload_migrations', true)) {
+            $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
+        }
 
         $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'joy-voyager');
 
@@ -74,6 +78,13 @@ class VoyagerCoreServiceProvider extends ServiceProvider
      */
     public function register()
     {
+        $loader = AliasLoader::getInstance();
+        $loader->alias('JoyVoyager', VoyagerFacade::class);
+
+        $this->app->singleton('joy-voyager', function () {
+            return new Voyager();
+        });
+
         $this->mergeConfigFrom(__DIR__ . '/../config/voyager.php', 'joy-voyager');
 
         $this->registerCommands();

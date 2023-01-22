@@ -3,10 +3,9 @@
 namespace Joy\VoyagerCore\Http\Controllers\Traits;
 
 use Illuminate\Http\Request;
-use InvalidArgumentException;
 use TCG\Voyager\Facades\Voyager;
 
-trait MorphToRelationAction
+trait RelationAction
 {
     /**
      * Get BREAD relations data.
@@ -15,7 +14,7 @@ trait MorphToRelationAction
      *
      * @return mixed
      */
-    public function morphToRelation(Request $request)
+    public function relation(Request $request)
     {
         $slug     = $this->getSlug($request);
         $page     = $request->input('page');
@@ -24,8 +23,6 @@ trait MorphToRelationAction
         $dataType = Voyager::model('DataType')->where('slug', '=', $slug)->first();
 
         $method = $request->input('method', 'add');
-
-        $typeColumnValue = $request->input('type-column-value');
 
         $model = app($dataType->model_name);
         if ($method != 'add' && $method != 'filter') {
@@ -38,15 +35,8 @@ trait MorphToRelationAction
         foreach ($rows as $key => $row) {
             if ($row->field === $request->input('type')) {
                 $options = $row->details;
-                if (!collect((array) $options->types)->contains('model', '=', $typeColumnValue)) {
-                    throw new InvalidArgumentException('Invalid type-column-value');
-                }
-
-                $options = collect((array) $options->types)->first(function ($item) use ($typeColumnValue) {
-                    return $item->model === $typeColumnValue;
-                });
-                $model = app($typeColumnValue);
-                $skip  = $on_page * ($page - 1);
+                $model   = app($options->model);
+                $skip    = $on_page * ($page - 1);
 
                 $additional_attributes = $model->additional_attributes ?? [];
 
@@ -60,7 +50,7 @@ trait MorphToRelationAction
                     // If we are using additional_attribute as label
                     if (in_array($options->label, $additional_attributes)) {
                         $relationshipOptions = $model->get();
-                        $relationshipOptions = $relationshipOptions->filter(function ($model) use ($search, $options, $type) {
+                        $relationshipOptions = $relationshipOptions->filter(function ($model) use ($search, $options) {
                             return stripos($model->{$options->label}, $search) !== false;
                         });
                         $total_count         = $relationshipOptions->count();

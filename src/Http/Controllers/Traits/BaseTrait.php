@@ -8,4 +8,5 @@ trait BaseTrait
     use ValidateBread;
     use GetContentBasedOnType;
     use MorphToRelationAction;
+    use RelationAction;
 }
