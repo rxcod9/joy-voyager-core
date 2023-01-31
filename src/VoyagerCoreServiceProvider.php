@@ -8,9 +8,14 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Foundation\AliasLoader;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Str;
 use Illuminate\Support\ServiceProvider;
+use Joy\VoyagerCore\Events\FormFieldsRegistered;
 use Joy\VoyagerCore\Http\Middleware\VoyagerAdminMiddleware;
 use Joy\VoyagerCore\Facades\Voyager as VoyagerFacade;
+use Joy\VoyagerCore\FormFields\After\DescriptionHandler;
+use Joy\VoyagerCore\Models\Via;
+use TCG\Voyager\Facades\Voyager as TcgVoyager;
 
 /**
  * Class VoyagerCoreServiceProvider
@@ -31,6 +36,8 @@ class VoyagerCoreServiceProvider extends ServiceProvider
      */
     public function boot(Router $router, Dispatcher $event)
     {
+        TcgVoyager::useModel('Via', Via::class);
+
         $this->registerPublishables();
 
         $this->loadViewsFrom(__DIR__ . '/../resources/views', 'joy-voyager');
@@ -85,6 +92,8 @@ class VoyagerCoreServiceProvider extends ServiceProvider
             return new Voyager();
         });
 
+        $this->registerFormFields();
+
         $this->mergeConfigFrom(__DIR__ . '/../config/voyager.php', 'joy-voyager');
 
         $this->registerCommands();
@@ -117,5 +126,43 @@ class VoyagerCoreServiceProvider extends ServiceProvider
     protected function registerCommands(): void
     {
         //
+    }
+
+    protected function registerFormFields()
+    {
+        $formFields = [
+            'checkbox',
+            'multiple_checkbox',
+            'color',
+            'date',
+            'file',
+            'image',
+            'multiple_images',
+            'media_picker',
+            'number',
+            'password',
+            'radio_btn',
+            'rich_text_box',
+            'code_editor',
+            'markdown_editor',
+            'select_dropdown',
+            'select_multiple',
+            'text',
+            'text_area',
+            'time',
+            'timestamp',
+            'hidden',
+            'coordinates',
+        ];
+
+        foreach ($formFields as $formField) {
+            $class = Str::studly("{$formField}_handler");
+
+            VoyagerFacade::addFormField("Joy\\VoyagerCore\\FormFields\\{$class}");
+        }
+
+        VoyagerFacade::addAfterFormField(DescriptionHandler::class);
+
+        event(new FormFieldsRegistered($formFields));
     }
 }

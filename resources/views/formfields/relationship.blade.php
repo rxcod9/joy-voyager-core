@@ -1,3 +1,13 @@
+@php
+    $name = $row->field;
+    $id = $row->field;
+    $inputKey = $row->field;
+    if($via ?? null) {
+        $name = $via->getNamePrefix() . '[' . $row->field . ']';
+        $id = $via->getIdPrefix() .'_' . $row->field;
+        $inputKey = $via->getInputKeyPrefix() . $row->field . '';
+    }
+@endphp
 @if(isset($options->model) && isset($options->type))
 
     @if(class_exists($options->model))
@@ -21,9 +31,19 @@
                 @endif
 
             @else
+                @php
+                    $name = $options->column;
+                    $id = $row->field;
+                    $inputKey = $row->field;
+                    if($via ?? null) {
+                        $name = $via->getNamePrefix() . '[' . $options->column . ']';
+                        $id = $via->getIdPrefix() .'_' . $options->column;
+                        $inputKey = $via->getInputKeyPrefix() . $options->column . '';
+                    }
+                @endphp
 
                 <select
-                    class="form-control select2-ajax" name="{{ $options->column }}"
+                    class="form-control select2-ajax" name="{{ $name }}"
                     data-get-items-route="{{route('voyager.' . $dataType->slug.'.relation')}}"
                     data-get-items-field="{{$row->field}}"
                     @if(!is_null($dataTypeContent->getKey())) data-id="{{$dataTypeContent->getKey()}}" @endif
@@ -32,7 +52,7 @@
                 >
                     @php
                         $model = app($options->model);
-                        $query = $model::where($options->key, old($options->column, $dataTypeContent->{$options->column}))->get();
+                        $query = $model::where($options->key, old($inputKey, $dataTypeContent->{$options->column}))->get();
                     @endphp
 
                     @if(!$row->required)
@@ -40,26 +60,30 @@
                     @endif
 
                     @foreach($query as $relationshipData)
-                        <option value="{{ $relationshipData->{$options->key} }}" @if(old($options->column, $dataTypeContent->{$options->column}) == $relationshipData->{$options->key}) selected="selected" @endif>{{ $relationshipData->{$options->label} }}</option>
+                        <option value="{{ $relationshipData->{$options->key} }}" @if(old($inputKey, $dataTypeContent->{$options->column}) == $relationshipData->{$options->key}) selected="selected" @endif>{{ $relationshipData->{$options->label} }}</option>
                     @endforeach
                 </select>
 
             @endif
 
         @elseif($options->type == 'hasOne')
+            @if(isset($view) && ($view == 'browse' || $view == 'read'))
 
-            @php
-                $relationshipData = (isset($data)) ? $data : $dataTypeContent;
+                @php
+                    $relationshipData = (isset($data)) ? $data : $dataTypeContent;
 
-                $model = app($options->model);
-                $query = $model::where($options->column, '=', $relationshipData->{$options->key})->first();
+                    $model = app($options->model);
+                    $query = $model::where($options->column, '=', $relationshipData->{$options->key})->first();
 
-            @endphp
+                @endphp
 
-            @if(isset($query))
-                <p>{{ $query->{$options->label} }}</p>
+                @if(isset($query))
+                    <p>{{ $query->{$options->label} }}</p>
+                @else
+                    <p>{{ __('voyager::generic.no_results') }}</p>
+                @endif
             @else
-                <p>{{ __('voyager::generic.no_results') }}</p>
+                @include('joy-voyager::formfields.relationship-has-one', ['row' => $row, 'dataTypeContent' => $dataTypeContent, 'options' => $options, 'via' => $via ?? null])
             @endif
 
         @elseif($options->type == 'hasMany')
@@ -98,8 +122,9 @@
                 @endif
 
             @else
+                @include('joy-voyager::formfields.relationship-has-many', ['row' => $row, 'dataTypeContent' => $dataTypeContent, 'options' => $options, 'via' => $via ?? null])
 
-                @php
+                {{-- @php
                     $model = app($options->model);
                     $query = $model::where($options->column, '=', $dataTypeContent->{$options->key})->get();
                 @endphp
@@ -113,7 +138,7 @@
 
                 @else
                     <p>{{ __('voyager::generic.no_results') }}</p>
-                @endif
+                @endif --}}
 
             @endif
 
@@ -152,9 +177,20 @@
                 @endif
 
             @else
+                @php
+                    $name = $row->field . '[]';
+                    $id = $row->field;
+                    $inputKey = $row->field;
+                    if($via ?? null) {
+                        $name = $via->getNamePrefix() . '[' . $row->field . '][]';
+                        $id = $via->getIdPrefix() .'_' . $row->field;
+                        $inputKey = $via->getInputKeyPrefix() . $row->field . '';
+                    }
+                @endphp
+                
                 <select
                     class="form-control select2-ajax @if(isset($options->taggable) && $options->taggable === 'on') taggable @endif"
-                    name="{{ $relationshipField }}[]" multiple
+                    name="{{ $name }}" multiple
                     data-get-items-route="{{route('voyager.' . $dataType->slug.'.relation')}}"
                     data-get-items-field="{{$row->field}}"
                     @if(!is_null($dataTypeContent->getKey())) data-id="{{$dataTypeContent->getKey()}}" @endif
@@ -180,7 +216,7 @@
                                     $options->key
                                 )->pluck($options->table.'.'.$options->key);
                             }
-                            $selected_keys = old($relationshipField, $selected_keys);
+                            $selected_keys = old($inputKey, $selected_keys);
                             $selected_values = app($options->model)->whereIn($options->key, $selected_keys)->pluck($options->label, $options->key);
                         @endphp
 
@@ -209,14 +245,17 @@
 
         @php
             $relationshipData = (isset($data)) ? $data : $dataTypeContent;
+            $typeColumn = isset($relationshipData) ? $relationshipData->{$options->type_column} : null;
             $query = isset($relationshipData) ? $relationshipData->morphTo($options->function, $options->type_column, $options->column ?? null)->getResults() : null;
-            $type = $query ? collect($options->types)->first(function($item) use($query) {
-                return $item->model === get_class($query);
+            $type = ($query || $typeColumn) ? collect($options->types)->first(function($item) use($query, $typeColumn) {
+                return $item->model === ($query ? get_class($query) : $typeColumn);
             }) : null;
         @endphp
 
         @if(isset($query))
             <p><b>{{ $type->display_name }}:</b> {{ $query->{$type->label} }}</p>
+        @elseif(isset($type))
+            <p><b>{{ $type->display_name }}:</b> {{ __('voyager::generic.no_results') }}</p>
         @else
             <p>{{ __('voyager::generic.no_results') }}</p>
         @endif
@@ -224,16 +263,34 @@
     @else
 
         @php
+            $typeName = $options->type_column;
+            $typeId = $options->type_column;
+            $typeInputKey = $options->type_column;
+            if($via ?? null) {
+                $typeName = $via->getNamePrefix() . '[' . $options->type_column . '][]';
+                $typeId = $via->getIdPrefix() .'_' . $options->type_column;
+                $typeInputKey = $via->getInputKeyPrefix() . $options->type_column . '';
+            }
+
+            $name = $options->column;
+            $id = $options->column;
+            $inputKey = $options->column;
+            if($via ?? null) {
+                $name = $via->getNamePrefix() . '[' . $options->column . '][]';
+                $id = $via->getIdPrefix() .'_' . $options->column;
+                $inputKey = $via->getInputKeyPrefix() . $options->column . '';
+            }
+
             $relationshipData = (isset($data)) ? $data : $dataTypeContent;
             $relationshipData = isset($relationshipData) ? $relationshipData->morphTo($options->function, $options->type_column, $options->column ?? null)->getResults() : null;
             $type = $relationshipData ? collect($options->types)->first(function($item) use($relationshipData) {
                 return $item->model === get_class($relationshipData);
             }) : null;
         @endphp
-        <?php $selectedValue = (isset($dataTypeContent->{$options->type_column}) && !is_null(old($options->type_column, $dataTypeContent->{$options->type_column}))) ? old($options->type_column, $dataTypeContent->{$options->type_column}) : old($options->type_column); ?>
+        <?php $selectedValue = (isset($dataTypeContent->{$options->type_column}) && !is_null(old($typeInputKey, $dataTypeContent->{$options->type_column}))) ? old($typeInputKey, $dataTypeContent->{$options->type_column}) : old($typeInputKey); ?>
         <select
             class="form-control select2-morph-to-type"
-            name="{{ $options->type_column }}"
+            name="{{ $typeName }}"
             data-column="{{ $options->column }}"
             style="margin-bottom: 10px;">
             <?php $default = (isset($options->type_default) && !isset($dataTypeContent->{$options->type_column})) ? $options->type_default : null; ?>
@@ -248,7 +305,7 @@
         </select>
 
         <select
-            class="form-control select2-morph-to-ajax select2-morph-to-id" name="{{ $options->column }}"
+            class="form-control select2-morph-to-ajax select2-morph-to-id" name="{{ $name }}"
             data-get-items-route="{{route('voyager.' . $dataType->slug.'.morph-to-relation')}}"
             data-get-items-field="{{$row->field}}"
             data-type-column="{{ $options->type_column }}"
@@ -261,7 +318,7 @@
             @endif
 
             @if($relationshipData)
-                <option value="{{ $relationshipData->{$type->key ?? 'id'} }}" @if(old($options->column, $dataTypeContent->{$options->column}) == $relationshipData->{$type->key ?? 'id'}) selected="selected" @endif>{{ $relationshipData->{$type->label} }}</option>
+                <option value="{{ $relationshipData->{$type->key ?? 'id'} }}" @if(old($inputKey, $dataTypeContent->{$options->column}) == $relationshipData->{$type->key ?? 'id'}) selected="selected" @endif>{{ $relationshipData->{$type->label} }}</option>
             @endif
         </select>
 

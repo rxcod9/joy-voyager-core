@@ -3,6 +3,7 @@
 namespace Joy\VoyagerCore\Http\Controllers\Traits;
 
 use Illuminate\Http\Request;
+use Joy\VoyagerCore\Facades\Voyager;
 use TCG\Voyager\Http\Controllers\ContentTypes\Checkbox;
 use TCG\Voyager\Http\Controllers\ContentTypes\Coordinates;
 use TCG\Voyager\Http\Controllers\ContentTypes\File;
@@ -19,7 +20,10 @@ trait GetContentBasedOnType
 {
     public function getContentBasedOnType(Request $request, $slug, $row, $options = null)
     {
-        // @todo ioc cotent types
+        if(Voyager::hasContentType($row)) {
+            return Voyager::contentType($request, $slug, $row, $options);
+        }
+
         switch ($row->type) {
             /********** PASSWORD TYPE **********/
             case 'password':

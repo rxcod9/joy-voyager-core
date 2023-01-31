@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Joy\VoyagerCore\Models\Via;
 use Symfony\Component\VarDumper\VarDumper;
 use TCG\Voyager\Facades\Voyager;
 use TCG\Voyager\Models\DataRow;
@@ -62,6 +63,18 @@ if (!function_exists('dataRowByField')) {
     }
 }
 
+if (!function_exists('dataTypeByModel')) {
+    /**
+     * DataType by model
+     *
+     * @param DataType
+     */
+    function dataTypeByModel($model): DataType
+    {
+        return Voyager::model('DataType')->where('model_name', $model)->firstOrFail();
+    }
+}
+
 if (!function_exists('removeRelationshipField')) {
     function removeRelationshipField(DataType $dataType, $bread_type = 'browse')
     {
@@ -107,5 +120,24 @@ if (!function_exists('pr')) {
         }
 
         // exit(1);
+    }
+}
+
+if (!function_exists('via')) {
+    /**
+     * @return ?Via
+     */
+    function via(
+        DataRow $row,
+        $viaIndex = null,
+        ?Via $via = null
+    ): ?Via {
+        $newVia = Voyager::model('Via');
+        $newVia->setOptions(
+            $row,
+            $viaIndex,
+            $via
+        );
+        return $newVia;
     }
 }
