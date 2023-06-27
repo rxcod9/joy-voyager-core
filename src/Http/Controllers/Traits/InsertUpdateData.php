@@ -2,13 +2,10 @@
 
 namespace Joy\VoyagerCore\Http\Controllers\Traits;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use TCG\Voyager\Http\Controllers\ContentTypes\File;
-use TCG\Voyager\Http\Controllers\ContentTypes\Relationship;
 
 trait InsertUpdateData
 {
