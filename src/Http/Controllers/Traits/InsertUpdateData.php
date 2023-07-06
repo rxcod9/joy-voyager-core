@@ -2,13 +2,10 @@
 
 namespace Joy\VoyagerCore\Http\Controllers\Traits;
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Storage;
-use TCG\Voyager\Http\Controllers\ContentTypes\File;
-use TCG\Voyager\Http\Controllers\ContentTypes\Relationship;
 
 trait InsertUpdateData
 {
@@ -207,6 +204,15 @@ trait InsertUpdateData
             }
         }
 
+        $this->overrideInsertUpdateData(
+            $request,
+            $slug,
+            $rows,
+            $data,
+            $via,
+            $viaCallback
+        );
+
         // FIX: Session store not set on request issue - voyager api issue
         // Rename folders for newly created data through media-picker
         if (Session::has($slug . '_path') || Session::has($slug . '_uuid')) {
@@ -293,5 +299,24 @@ trait InsertUpdateData
         });
 
         $request->replace($original);
+    }
+
+    /**
+     * Override InsertUpdateData.
+     *
+     * @param Request $request Request
+     * @param mixed   $data    Data
+     *
+     * @return mixed
+     */
+    protected function overrideInsertUpdateData(
+        $request,
+        $slug,
+        $rows,
+        $data,
+        $via = null,
+        $viaCallback = null
+    ) {
+        //
     }
 }
