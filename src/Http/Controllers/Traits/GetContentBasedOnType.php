@@ -20,7 +20,7 @@ trait GetContentBasedOnType
 {
     public function getContentBasedOnType(Request $request, $slug, $row, $options = null)
     {
-        if(Voyager::hasContentType($row)) {
+        if (Voyager::hasContentType($row)) {
             return Voyager::contentType($request, $slug, $row, $options);
         }
 
